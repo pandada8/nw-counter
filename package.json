@@ -1,0 +1,19 @@
+{
+  "name": "nw-conter",
+  "version": "0.1.0",
+  "description": "A simple counter",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pandada8/nw-couter.git"
+  },
+  "author": "pandada8 <pandada8@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pandada8/nw-couter/issues"
+  },
+  "homepage": "https://github.com/pandada8/nw-couter#readme"
+}
