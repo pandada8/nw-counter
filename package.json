@@ -19,10 +19,16 @@
   },
   "homepage": "https://github.com/pandada8/nw-couter#readme",
   "dependencies": {
+    "autoprefixer": "^6.0.3",
+    "autoprefixer-core": "^6.0.1",
     "babel-core": "^5.8.25",
     "babel-loader": "^5.3.2",
+    "css-loader": "^0.21.0",
+    "cssnext": "^1.8.4",
     "lodash": "^3.10.1",
     "material-ui": "^0.12.4",
+    "postcss-loader": "^0.7.0",
+    "postcss-nested": "^1.0.0",
     "react": "^0.14.0",
     "react-addons-create-fragment": "^0.14.0",
     "react-addons-pure-render-mixin": "^0.14.0",
@@ -31,6 +37,7 @@
     "react-dom": "^0.14.0",
     "react-tap-event-plugin": "^0.2.1",
     "reflux": "^0.3.0",
+    "style-loader": "^0.13.0",
     "webpack": "^1.12.2"
   }
 }

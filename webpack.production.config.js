@@ -27,7 +27,20 @@ module.exports = {
           stage: 0
         },
         exclude: [node_modules_folder]
+      },
+      {
+        test: /\.css$/,
+        loaders: [
+          "style-loader",
+          "css-loader?modules&localIdentName=[name]__[local]___[hash:base64:5]",
+          'postcss-loader',
+        ]
       }
     ]
-  }
+  },
+  postcss: [
+    require('postcss-nested')(),
+    require('cssnext')(),
+    require('autoprefixer-core')({ browsers: ['last 2 versions'] })
+  ]
 }
