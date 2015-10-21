@@ -15,5 +15,16 @@
   "bugs": {
     "url": "https://github.com/pandada8/nw-couter/issues"
   },
-  "homepage": "https://github.com/pandada8/nw-couter#readme"
+  "homepage": "https://github.com/pandada8/nw-couter#readme",
+  "dependencies": {
+    "material-ui": "^0.12.4",
+    "react": "^0.14.0",
+    "react-addons-create-fragment": "^0.14.0",
+    "react-addons-pure-render-mixin": "^0.14.0",
+    "react-addons-transition-group": "^0.14.0",
+    "react-addons-update": "^0.14.0",
+    "react-dom": "^0.14.0",
+    "react-tap-event-plugin": "^0.2.1",
+    "reflux": "^0.3.0"
+  }
 }
