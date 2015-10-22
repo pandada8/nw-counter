@@ -4,6 +4,7 @@ var node_modules_folder = path.resolve(__dirname, "node_modules")
 
 module.exports = {
   entry: "./src/index.jsx",
+  devtool: "source-map",
   output: {
     filename: "bundle.js",
     path: __dirname + "/dist",
