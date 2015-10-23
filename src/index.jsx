@@ -102,6 +102,7 @@ let CounterStore = Reflux.createStore({
   resetTime: function(){
     this.state.status = "stopped"
     this.state.now = this.config["time_"+this.state.step]
+    this._msg()
   }
 })
 
