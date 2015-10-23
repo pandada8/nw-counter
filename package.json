@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack --progress -w",
-    "build": "webpack --progress -p -c webpack.production.config.js"
+    "build": "webpack --progress -p --optimize-occurence-order --optimize-minimize -c webpack.production.config.js"
   },
   "repository": {
     "type": "git",

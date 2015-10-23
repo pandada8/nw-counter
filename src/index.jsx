@@ -18,7 +18,7 @@ injectTapEventPlugin();
 var css = require("./style.css");
 
 let alarmActions = Reflux.createActions([
-  "alarm"
+  "alarm",
 ])
 
 let alarmStore　= Reflux.createStore({
@@ -165,6 +165,7 @@ let Counter = React.createClass({
       case "before":
       let dom = ReactDOM.findDOMNode(this.refs.alarmbefore)
       dom.paused && dom.play()
+      setTimeout(()=>{dom.pause();dom.currentTime=0}, 5000)
       return
       case "finish":
       ReactDOM.findDOMNode(this.refs.alarmfinish).play()
@@ -178,7 +179,8 @@ let Counter = React.createClass({
       status: data.status,
       step: data.step,
       config: data.config,
-      percent: data.now / data.max * 100
+      percent: data.now / data.max * 100,
+      max: data.max
     })
   },
   getInitialState: function(){
@@ -217,11 +219,12 @@ let Counter = React.createClass({
       }
     }
     let time
-    if (this.state.now > 30){
+    if (this.state.now > CounterStore.config.alarmtime){
       let t = this.state.now / 1000;
       time = `${Math.floor(t / 60)}:${_.padLeft(Math.floor(t%60).toString(), 2, '0')}`
     }else{
-      time = `${Math.floor(this.state.now / 100)/10}`
+      let now = this.state.now / 100
+      time = `${Math.floor(this.state.now / 1000)}.${(this.state.now % 1000)/100}`
     }
     let color = this.state.status == "running" ? (this.state.now > 30*1000 ? Colors.blue400 : Colors.red400) : Colors.grey600
 
@@ -240,8 +243,8 @@ let Counter = React.createClass({
           <Circle  strokeWidth={4} strokeColor={color} percent={this.state.percent} trailWidth={2} trailColor={Colors.grey300} />
         </Paper>
         <div>
-          <audio ref="alarmbefore" src="static/30.mp3" preload="auto"></audio>
-          <audio ref="alarmfinish" src="static/finish.mp3" preload="auto"></audio>
+          <audio ref="alarmbefore" src="static/30.ogg" preload="auto"></audio>
+          <audio ref="alarmfinish" src="static/finish.ogg" preload="auto"></audio>
         </div>
 
       </div>
@@ -251,7 +254,7 @@ let Counter = React.createClass({
 let Settings = React.createClass({
   mixins: [Reflux.listenTo(CounterStore, "onConfigUpdate")],
   onConfigUpdate: function(data){
-    console.log(data.config)
+    // console.log(data.config)
     this.setState({config: data.config})
   },
   render: function(){
