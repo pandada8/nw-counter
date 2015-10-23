@@ -17,6 +17,17 @@ injectTapEventPlugin();
 // Store part
 var css = require("./style.css");
 
+let alarmActions = Reflux.createActions([
+  "alarm"
+])
+
+let alarmStore　= Reflux.createStore({
+  listenables: alarmActions,
+  alarm: function(){
+    this.trigger.apply(this, _.toArray(arguments))
+  }
+})
+
 let CounterActions = Reflux.createActions([
   "start",
   "resetTime",
@@ -55,12 +66,16 @@ let CounterStore = Reflux.createStore({
     const TICK = 100
     console.log(this.state.status, this.state.now)
     if(this.state.status == "running"){
+      if(this.state.now == this.config.alarmtime){
+        alarmActions.alarm("before")
+      }
       if(this.state.now >= TICK){
         this.state.now -= TICK
         this._msg()
         this._timer = setTimeout(this.tick, TICK)
       }else{
-        this.state.now = 0,
+        alarmActions.alarm("finish")
+        this.state.now = 0
         this.state.status = "stopped"
         this._msg()
       }
@@ -144,7 +159,19 @@ let Circle = React.createClass({
 
 
 let Counter = React.createClass({
-  mixins:[Reflux.listenTo(CounterStore, "onStatusChange")],
+  mixins:[Reflux.listenTo(CounterStore, "onStatusChange"), Reflux.listenTo(alarmStore, "onAlarm")],
+  onAlarm: function(type){
+    switch(type){
+      case "before":
+      let dom = ReactDOM.findDOMNode(this.refs.alarmbefore)
+      dom.paused && dom.play()
+      return
+      case "finish":
+      ReactDOM.findDOMNode(this.refs.alarmfinish).play()
+      return
+
+    }
+  },
   onStatusChange: function(data){
     this.setState({
       now: data.now,
@@ -213,7 +240,7 @@ let Counter = React.createClass({
           <Circle  strokeWidth={4} strokeColor={color} percent={this.state.percent} trailWidth={2} trailColor={Colors.grey300} />
         </Paper>
         <div>
-          <audio ref="alarm30" src="static/30.mp3" preload="auto"></audio>
+          <audio ref="alarmbefore" src="static/30.mp3" preload="auto"></audio>
           <audio ref="alarmfinish" src="static/finish.mp3" preload="auto"></audio>
         </div>
 
@@ -293,5 +320,3 @@ let Root = React.createClass({
   }
 })
 ReactDOM.render(<Root />, document.getElementById('container'))
-
-// bind the root
