@@ -78,6 +78,43 @@ let CounterStore = Reflux.createStore({
   }
 })
 
+let Circle = React.createClass({
+  render() {
+    var props = this.props
+    var strokeWidth = props.strokeWidth;
+    var radius = (50 - strokeWidth / 2);
+    var pathString = `M 50,50 m 0,-${radius}
+     a ${radius},${radius} 0 1 1 0,${2 * radius}
+     a ${radius},${radius} 0 1 1 0,-${2 * radius}`;
+    var len = Math.PI * 2 * radius;
+    var pathStyle = {
+      'strokeDasharray': `${len}px ${len}px`,
+      'strokeDashoffset': `${((100 - props.percent) / 100 * len)}px`,
+      'transition': 'stroke-dashoffset 0.6s ease 0s, stroke 0.6s ease'
+    };
+    ['strokeWidth', 'strokeColor', 'trailWidth', 'trailColor'].forEach((item) => {
+      if (item === 'trailWidth' && !props.trailWidth && props.strokeWidth) {
+        props.trailWidth = props.strokeWidth;
+        return;
+      }
+      if (!props[item]) {
+        props[item] = defaultProps[item];
+      }
+    });
+
+    return (
+      <svg className='rc-progress-circle' viewBox='0 0 100 100'>
+        <path className='rc-progress-circle-trail' d={pathString} stroke={props.trailColor}
+          strokeWidth={props.trailWidth} fillOpacity='0'/>
+
+        <path className='rc-progress-circle-path' d={pathString} strokeLinecap='round'
+          stroke={props.strokeColor} strokeWidth={props.strokeWidth} fillOpacity='0' style={pathStyle} />
+      </svg>
+    );
+  }
+});
+
+
 let Counter = React.createClass({
   mixins:[Reflux.listenTo(CounterStore, "onStatusChange")],
   onStatusChange: function(data){
@@ -86,7 +123,6 @@ let Counter = React.createClass({
       status: data.status,
       step: data.step,
       config: data.config,
-
       degree: data.now / data.max * 360
     })
   },
@@ -95,9 +131,9 @@ let Counter = React.createClass({
       config: CounterStore.config,
       status: CounterStore.state.status,
       step: CounterStore.state.step,
-      now: 0,
-      max: 0
-
+      now: CounterStore.config["time_"+CounterStore.state.step],
+      max: CounterStore.config["time_"+CounterStore.state.step],
+      degree: 180
     }
   },
   render: function(){
@@ -116,7 +152,7 @@ let Counter = React.createClass({
           <audio ref="alarm30" src="static/30.mp3" preload="auto"></audio>
           <audio ref="alarmfinish" src="static/finish.mp3" preload="auto"></audio>
         </div>
-
+        <FlatButton label="重置" />
       </div>
   }
 })
@@ -139,13 +175,13 @@ let Settings = React.createClass({
     return <Paper zIndex={2} style={{maxWidth: "600", margin: "auto", paddingTop: 8, marginTop: 10}}>
       <h3 style={style}>时间设置</h3>
       <div style={input_style}>
-        <TextField hintText="以秒为单位" floatingLabelText="班级风采展示时间" />
+        <TextField hintText="以秒为单位" floatingLabelText="班级风采展示时间" onBlur={e=>{CounterActions._config({time_class:e.target.value})}} defaultValue={this.state.config.time_class}/>
       </div>
       <div style={input_style}>
-        <TextField hintText="以秒为单位" floatingLabelText="自由展示时间" />
+        <TextField hintText="以秒为单位" floatingLabelText="自由展示时间" onBlur={e=>{CounterActions._config({time_free:e.target.value})}} defaultValue={this.state.config.time_free}/>
       </div>
       <div style={input_style}>
-        <TextField hintText="以秒为单位" floatingLabelText="评委嘉宾提问时间" onBlur={e=>{console.log(e)}}/>
+        <TextField hintText="以秒为单位" floatingLabelText="评委嘉宾提问时间" onBlur={e=>{CounterActions._config({time_ask:e.target.value})}} defaultValue={this.state.config.time_ask}/>
       </div>
       <h3 style={style}>提示设置</h3>
       <div style={style}>
