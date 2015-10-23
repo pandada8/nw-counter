@@ -52,7 +52,8 @@ let CounterStore = Reflux.createStore({
        status: "stopped",
        step: "class",
     }
-    this.state.now = this.config['time_'+ this.state.step]
+    this.state.now = this.config['time_'+ this.state.step],
+    this.timer = setInterval(this.tick, 100)
   },
   switch: function(plan){
     if(["class", 'free', 'ask'].indexOf(plan) > -1){
@@ -72,7 +73,6 @@ let CounterStore = Reflux.createStore({
       if(this.state.now >= TICK){
         this.state.now -= TICK
         this._msg()
-        this._timer = setTimeout(this.tick, TICK)
       }else{
         alarmActions.alarm("finish")
         this.state.now = 0
