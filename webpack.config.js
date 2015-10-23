@@ -28,10 +28,5 @@ module.exports = {
         ]
       }
     ]
-  },
-  postcss: [
-    require('postcss-nested')(),
-    require('cssnext')(),
-    require('autoprefixer')({ browsers: ['last 2 versions'] })
-  ]
+  }
 }
