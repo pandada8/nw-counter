@@ -22,6 +22,7 @@ let CounterActions = Reflux.createActions([
   "resetTime",
   "pause",
   "toggle",
+  "switch",
   "_config"
 ])
 
@@ -40,6 +41,14 @@ let CounterStore = Reflux.createStore({
        step: "class",
     }
     this.state.now = this.config['time_'+ this.state.step]
+  },
+  switch: function(plan){
+    if(["class", 'free', 'ask'].indexOf(plan) > -1){
+      this.state.step = plan
+      let max = this.config["time_"+this.state.step]
+      this.state.now = this.state.now > max ? max : this.state.now
+      this._msg()
+    }
   },
   tick: function(){
     const TICK = 100
@@ -92,7 +101,6 @@ let CounterStore = Reflux.createStore({
   },
   resetTime: function(){
     this.state.status = "stopped"
-    this.state.step = "class"
     this.state.now = this.config["time_"+this.state.step]
   }
 })
@@ -155,10 +163,13 @@ let Counter = React.createClass({
     }
   },
   handleClick: function(e){
-    if(e.refs.config.contains(e.target)){
+    if(ReactDOM.findDOMNode(this.refs.config).contains(e.target)){
       return
     }
     CounterActions.toggle()
+  },
+  ChangePlan: function(e, n, item){
+    CounterActions.switch(item.payload)
   },
   render: function(){
     let style = {
@@ -212,7 +223,7 @@ let Settings = React.createClass({
   mixins: [Reflux.listenTo(CounterStore, "onConfigUpdate")],
   onConfigUpdate: function(data){
     console.log(data)
-    this.state.config = data.config
+    this.setState({config: data.config})
   },
   render: function(){
     let style = {
