@@ -65,7 +65,7 @@ let CounterStore = Reflux.createStore({
   },
   tick: function(){
     const TICK = 100
-    console.log(this.state.status, this.state.now)
+    // console.log(this.state.status, this.state.now)
     if(this.state.status == "running"){
       if(this.state.now == this.config.alarmtime){
         alarmActions.alarm("before")
