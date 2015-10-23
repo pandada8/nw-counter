@@ -34,7 +34,8 @@ let CounterStore = Reflux.createStore({
       alertfinish: true,
       time_class: 240 * 1000,
       time_free: 180 * 1000,
-      time_ask: 60 * 1000
+      time_ask: 60 * 1000,
+      alarmtime: 30 * 1000
     }
     this.state = {
        status: "stopped",
@@ -68,7 +69,7 @@ let CounterStore = Reflux.createStore({
     }
   },
   _config: function(config){
-    this.config = _.extend(config, this.config)
+    this.config = _.extend(this.config, config)
     this._msg()
   },
   _msg: function(){
@@ -223,7 +224,7 @@ let Counter = React.createClass({
 let Settings = React.createClass({
   mixins: [Reflux.listenTo(CounterStore, "onConfigUpdate")],
   onConfigUpdate: function(data){
-    console.log(data)
+    console.log(data.config)
     this.setState({config: data.config})
   },
   render: function(){
@@ -238,17 +239,32 @@ let Settings = React.createClass({
     return <Paper zIndex={2} style={{maxWidth: "600", margin: "auto", paddingTop: 8, marginTop: 10}}>
       <h3 style={style}>时间设置</h3>
       <div style={input_style}>
-        <TextField hintText="以秒为单位" floatingLabelText="班级风采展示时间" onBlur={e=>{CounterActions._config({time_class:e.target.value})}} defaultValue={this.state.config.time_class}/>
+        <TextField hintText="以秒为单位" floatingLabelText="班级风采展示时间"
+        onBlur={e=>{CounterActions._config({time_class:e.target.value*1000})}}
+        onEnterKeyDown={e=>{CounterActions._config({time_class:e.target.value*1000})}}
+        defaultValue={this.state.config.time_class/1000}/>
       </div>
       <div style={input_style}>
-        <TextField hintText="以秒为单位" floatingLabelText="自由展示时间" onBlur={e=>{CounterActions._config({time_free:e.target.value})}} defaultValue={this.state.config.time_free}/>
+        <TextField hintText="以秒为单位" floatingLabelText="自由展示时间"
+        onBlur={e=>{CounterActions._config({time_free:e.target.value*1000})}}
+        onEnterKeyDown={e=>{CounterActions._config({time_free:e.target.value*1000})}}
+        defaultValue={this.state.config.time_free/1000}/>
       </div>
       <div style={input_style}>
-        <TextField hintText="以秒为单位" floatingLabelText="评委嘉宾提问时间" onBlur={e=>{CounterActions._config({time_ask:e.target.value})}} defaultValue={this.state.config.time_ask}/>
+        <TextField hintText="以秒为单位" floatingLabelText="评委嘉宾提问时间"
+        onBlur={e=>{CounterActions._config({time_ask:e.target.value*1000})}}
+        onEnterKeyDown={e=>{CounterActions._config({time_ask:e.target.value*1000})}}
+        defaultValue={this.state.config.time_ask/1000}/>
+      </div>
+      <div style={input_style}>
+        <TextField hintText="以秒为单位" floatingLabelText="提醒时间"
+        onBlur={e=>{CounterActions._config({alarmtime:e.target.value*1000})}}
+        onEnterKeyDown={e=>{CounterActions._config({alarmtime:e.target.value*1000})}}
+        defaultValue={this.state.config.alarmtime/1000}/>
       </div>
       <h3 style={style}>提示设置</h3>
       <div style={style}>
-        <Toggle defaultToggled={this.state.config.alert30} label="还有30秒时提示" onToggle={ (e, toggled)=> {CounterActions._config({alert30: toggled}) }}/>
+        <Toggle defaultToggled={this.state.config.alert30} label={"还有"+this.state.config.alarmtime/1000+"秒时提示"} onToggle={ (e, toggled)=> {CounterActions._config({alert30: toggled}) }}/>
       </div>
       <div style={style}>
         <Toggle defaultToggled={this.state.config.alertfinish} label="结束时提示" onToggle={ (e, toggled)=> {CounterActions._config({alertfinish: toggled}) }} />
@@ -259,13 +275,7 @@ let Settings = React.createClass({
   },
   getInitialState: function(){
     return {
-      config: {
-        alert30: true,
-        alertfinish: true,
-        time_class: 240,
-        time_free: 180,
-        time_ask: 60
-      }
+      config: CounterStore.config
     }
   }
 })
