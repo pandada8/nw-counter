@@ -215,7 +215,7 @@ let Counter = React.createClass({
       },
       text_inner: {
         fontSize: 90,
-        color: (this.state.status == "running" && this.state.now <= 30*100) ? Colors.red600　: Colors.black
+        color: (this.state.status == "running" && this.state.now <= CounterStore.config.alarmtime) ? Colors.red600　: Colors.black
       }
     }
     let time
@@ -226,7 +226,7 @@ let Counter = React.createClass({
       let now = this.state.now / 100
       time = `${Math.floor(this.state.now / 1000)}.${(this.state.now % 1000)/100}`
     }
-    let color = this.state.status == "running" ? (this.state.now > 30*1000 ? Colors.blue400 : Colors.red400) : Colors.grey600
+    let color = this.state.status == "running" ? (this.state.now > CounterStore.config.alarmtime ? Colors.blue400 : Colors.red400) : Colors.grey600
 
     let configs = [
       { payload: "class", text: "班级风采展示时间"},
