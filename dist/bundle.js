@@ -100,6 +100,15 @@
 	// Store part
 	var css = __webpack_require__(238);
 	
+	var alarmActions = _reflux2["default"].createActions(["alarm"]);
+	
+	var alarmStore = _reflux2["default"].createStore({
+	  listenables: alarmActions,
+	  alarm: function alarm() {
+	    this.trigger.apply(this, _lodash2["default"].toArray(arguments));
+	  }
+	});
+	
 	var CounterActions = _reflux2["default"].createActions(["start", "resetTime", "pause", "toggle", "switch", "_config"]);
 	
 	var CounterStore = _reflux2["default"].createStore({
@@ -110,7 +119,8 @@
 	      alertfinish: true,
 	      time_class: 240 * 1000,
 	      time_free: 180 * 1000,
-	      time_ask: 60 * 1000
+	      time_ask: 60 * 1000,
+	      alarmtime: 30 * 1000
 	    };
 	    this.state = {
 	      status: "stopped",
@@ -130,12 +140,17 @@
 	    var TICK = 100;
 	    console.log(this.state.status, this.state.now);
 	    if (this.state.status == "running") {
+	      if (this.state.now == this.config.alarmtime) {
+	        alarmActions.alarm("before");
+	      }
 	      if (this.state.now >= TICK) {
 	        this.state.now -= TICK;
 	        this._msg();
 	        this._timer = setTimeout(this.tick, TICK);
 	      } else {
-	        this.state.now = 0, this.state.status = "stopped";
+	        alarmActions.alarm("finish");
+	        this.state.now = 0;
+	        this.state.status = "stopped";
 	        this._msg();
 	      }
 	    } else {
@@ -143,7 +158,7 @@
 	    }
 	  },
 	  _config: function _config(config) {
-	    this.config = _lodash2["default"].extend(config, this.config);
+	    this.config = _lodash2["default"].extend(this.config, config);
 	    this._msg();
 	  },
 	  _msg: function _msg() {
@@ -218,7 +233,19 @@
 	var Counter = _react2["default"].createClass({
 	  displayName: "Counter",
 	
-	  mixins: [_reflux2["default"].listenTo(CounterStore, "onStatusChange")],
+	  mixins: [_reflux2["default"].listenTo(CounterStore, "onStatusChange"), _reflux2["default"].listenTo(alarmStore, "onAlarm")],
+	  onAlarm: function onAlarm(type) {
+	    switch (type) {
+	      case "before":
+	        var dom = _reactDom2["default"].findDOMNode(this.refs.alarmbefore);
+	        dom.paused && dom.play();
+	        return;
+	      case "finish":
+	        _reactDom2["default"].findDOMNode(this.refs.alarmfinish).play();
+	        return;
+	
+	    }
+	  },
 	  onStatusChange: function onStatusChange(data) {
 	    this.setState({
 	      now: data.now,
@@ -299,7 +326,7 @@
 	      _react2["default"].createElement(
 	        "div",
 	        null,
-	        _react2["default"].createElement("audio", { ref: "alarm30", src: "static/30.mp3", preload: "auto" }),
+	        _react2["default"].createElement("audio", { ref: "alarmbefore", src: "static/30.mp3", preload: "auto" }),
 	        _react2["default"].createElement("audio", { ref: "alarmfinish", src: "static/finish.mp3", preload: "auto" })
 	      )
 	    );
@@ -311,7 +338,7 @@
 	
 	  mixins: [_reflux2["default"].listenTo(CounterStore, "onConfigUpdate")],
 	  onConfigUpdate: function onConfigUpdate(data) {
-	    console.log(data);
+	    console.log(data.config);
 	    this.setState({ config: data.config });
 	  },
 	  render: function render() {
@@ -334,23 +361,50 @@
 	      _react2["default"].createElement(
 	        "div",
 	        { style: input_style },
-	        _react2["default"].createElement(_materialUiLibTextField2["default"], { hintText: "以秒为单位", floatingLabelText: "班级风采展示时间", onBlur: function (e) {
-	            CounterActions._config({ time_class: e.target.value });
-	          }, defaultValue: this.state.config.time_class })
+	        _react2["default"].createElement(_materialUiLibTextField2["default"], { hintText: "以秒为单位", floatingLabelText: "班级风采展示时间",
+	          onBlur: function (e) {
+	            CounterActions._config({ time_class: e.target.value * 1000 });
+	          },
+	          onEnterKeyDown: function (e) {
+	            CounterActions._config({ time_class: e.target.value * 1000 });
+	          },
+	          defaultValue: this.state.config.time_class / 1000 })
 	      ),
 	      _react2["default"].createElement(
 	        "div",
 	        { style: input_style },
-	        _react2["default"].createElement(_materialUiLibTextField2["default"], { hintText: "以秒为单位", floatingLabelText: "自由展示时间", onBlur: function (e) {
-	            CounterActions._config({ time_free: e.target.value });
-	          }, defaultValue: this.state.config.time_free })
+	        _react2["default"].createElement(_materialUiLibTextField2["default"], { hintText: "以秒为单位", floatingLabelText: "自由展示时间",
+	          onBlur: function (e) {
+	            CounterActions._config({ time_free: e.target.value * 1000 });
+	          },
+	          onEnterKeyDown: function (e) {
+	            CounterActions._config({ time_free: e.target.value * 1000 });
+	          },
+	          defaultValue: this.state.config.time_free / 1000 })
 	      ),
 	      _react2["default"].createElement(
 	        "div",
 	        { style: input_style },
-	        _react2["default"].createElement(_materialUiLibTextField2["default"], { hintText: "以秒为单位", floatingLabelText: "评委嘉宾提问时间", onBlur: function (e) {
-	            CounterActions._config({ time_ask: e.target.value });
-	          }, defaultValue: this.state.config.time_ask })
+	        _react2["default"].createElement(_materialUiLibTextField2["default"], { hintText: "以秒为单位", floatingLabelText: "评委嘉宾提问时间",
+	          onBlur: function (e) {
+	            CounterActions._config({ time_ask: e.target.value * 1000 });
+	          },
+	          onEnterKeyDown: function (e) {
+	            CounterActions._config({ time_ask: e.target.value * 1000 });
+	          },
+	          defaultValue: this.state.config.time_ask / 1000 })
+	      ),
+	      _react2["default"].createElement(
+	        "div",
+	        { style: input_style },
+	        _react2["default"].createElement(_materialUiLibTextField2["default"], { hintText: "以秒为单位", floatingLabelText: "提醒时间",
+	          onBlur: function (e) {
+	            CounterActions._config({ alarmtime: e.target.value * 1000 });
+	          },
+	          onEnterKeyDown: function (e) {
+	            CounterActions._config({ alarmtime: e.target.value * 1000 });
+	          },
+	          defaultValue: this.state.config.alarmtime / 1000 })
 	      ),
 	      _react2["default"].createElement(
 	        "h3",
@@ -360,7 +414,7 @@
 	      _react2["default"].createElement(
 	        "div",
 	        { style: style },
-	        _react2["default"].createElement(_materialUiLibToggle2["default"], { defaultToggled: this.state.config.alert30, label: "还有30秒时提示", onToggle: function (e, toggled) {
+	        _react2["default"].createElement(_materialUiLibToggle2["default"], { defaultToggled: this.state.config.alert30, label: "还有" + this.state.config.alarmtime / 1000 + "秒时提示", onToggle: function (e, toggled) {
 	            CounterActions._config({ alert30: toggled });
 	          } })
 	      ),
@@ -380,13 +434,7 @@
 	  },
 	  getInitialState: function getInitialState() {
 	    return {
-	      config: {
-	        alert30: true,
-	        alertfinish: true,
-	        time_class: 240,
-	        time_free: 180,
-	        time_ask: 60
-	      }
+	      config: CounterStore.config
 	    };
 	  }
 	});
@@ -412,8 +460,6 @@
 	  }
 	});
 	_reactDom2["default"].render(_react2["default"].createElement(Root, null), document.getElementById('container'));
-	
-	// bind the root
 
 /***/ },
 /* 1 */
