@@ -9,6 +9,7 @@ import Toggle from "material-ui/lib/toggle";
 import _ from "lodash";
 import Knob from "./knob.jsx"
 import FlatButton from "material-ui/lib/flat-button";
+import DropDownMenu from "material-ui/lib/drop-down-menu"
 
 let injectTapEventPlugin = require("react-tap-event-plugin");
 injectTapEventPlugin();
@@ -18,14 +19,14 @@ var css = require("./style.css");
 
 let CounterActions = Reflux.createActions([
   "start",
-  "reset",
+  "resetTime",
   "pause",
   "toggle",
   "_config"
 ])
 
 let CounterStore = Reflux.createStore({
-  listenables: CounterStore,
+  listenables: CounterActions,
   init: function(){
     this.config　= {
       alert30: true,
@@ -37,18 +38,29 @@ let CounterStore = Reflux.createStore({
     this.state = {
        status: "stopped",
        step: "class",
-       now: 0,
     }
+    this.state.now = this.config['time_'+ this.state.step]
   },
   tick: function(){
-    if(this.state){
-
+    const TICK = 100
+    console.log(this.state.status, this.state.now)
+    if(this.state.status == "running"){
+      if(this.state.now >= TICK){
+        this.state.now -= TICK
+        this._msg()
+        this._timer = setTimeout(this.tick, TICK)
+      }else{
+        this.state.now = 0,
+        this.state.status = "stopped"
+        this._msg()
+      }
+    }else{
+      return
     }
-    setTimeout()
   },
   _config: function(config){
     this.config = _.extend(config, this.config)
-
+    this._msg()
   },
   _msg: function(){
     this.trigger({
@@ -59,22 +71,29 @@ let CounterStore = Reflux.createStore({
       max: this.config["time_"+this.state.step],
     })
   },
-  start: function(max){
+  start: function(){
     if(this.state.status == "running")
       return
-    if(this.time >= 0){
-      let step = 200;
-      this.timer = setInterval(()=> {
-        if(this.state.status == "running"){
-          if(this.time >= 0){
-            this.time -= step / 1000
-            this.trigger(this)
-          }
-        }else{
-          this.timer && window.clearInterval(this.timer)
-        }
-      }, step)
+    if(this.state.now >= 0){
+      this.state.status = "running"
+      this.tick()
     }
+  },
+  pause: function(){
+    this.state.status = "stopped"
+    this._msg()
+  },
+  toggle: function(){
+    if(this.state.status == "running"){
+      this.pause()
+    }else{
+      this.start()
+    }
+  },
+  resetTime: function(){
+    this.state.status = "stopped"
+    this.state.step = "class"
+    this.state.now = this.config["time_"+this.state.step]
   }
 })
 
@@ -106,7 +125,6 @@ let Circle = React.createClass({
       <svg className='rc-progress-circle' viewBox='0 0 100 100'>
         <path className='rc-progress-circle-trail' d={pathString} stroke={props.trailColor}
           strokeWidth={props.trailWidth} fillOpacity='0'/>
-
         <path className='rc-progress-circle-path' d={pathString} strokeLinecap='round'
           stroke={props.strokeColor} strokeWidth={props.strokeWidth} fillOpacity='0' style={pathStyle} />
       </svg>
@@ -123,7 +141,7 @@ let Counter = React.createClass({
       status: data.status,
       step: data.step,
       config: data.config,
-      degree: data.now / data.max * 360
+      percent: data.now / data.max * 100
     })
   },
   getInitialState: function(){
@@ -136,23 +154,56 @@ let Counter = React.createClass({
       degree: 180
     }
   },
+  handleClick: function(e){
+    if(e.refs.config.contains(e.target)){
+      return
+    }
+    CounterActions.toggle()
+  },
   render: function(){
-    return <div className="Knob" onClick={this.handleClick}>
-        <div className="Knob-label">
-          {this.state.now}
-        </div>
-        <div
-          className="Knob-spinner"
-          style={{
-            transform: `rotate(${-45 + this.state.degree}deg)`
-          }}
-        >
-        </div>
+    let style = {
+      text: {
+        position: "absolute",
+        width: "100%",
+        top: "50%",
+        textAlign: "center",
+        marginTop: -80,
+        paddingRight: 60,
+        boxSizing:　"border-box",
+      },
+      text_inner: {
+        fontSize: 90,
+        color: (this.state.status == "running" && this.state.now <= 30*100) ? Colors.red600　: Colors.black
+      }
+    }
+    let time
+    if (this.state.now > 30){
+      let t = this.state.now / 1000;
+      time = `${Math.floor(t / 60)}:${_.padLeft(Math.floor(t%60).toString(), 2, '0')}`
+    }else{
+      time = `${Math.floor(this.state.now / 100)/10}`
+    }
+    let color = this.state.status == "running" ? (this.state.now > 30*1000 ? Colors.blue400 : Colors.red400) : Colors.grey600
+
+    let configs = [
+      { payload: "class", text: "班级风采展示时间"},
+      { payload: "free", text: "自由展示时间"},
+      { payload: "ask", text: "评委嘉宾提问时间"},
+    ]
+    return <div>
+        <Paper zIndex={2} style={{maxWidth: 600, padding: "30px", position: "relative",margin: "auto" , marginTop: 30, }} onClick={this.handleClick} >
+          <div style={style.text}>
+            <DropDownMenu ref="config" menuItems={configs} onChange={this.ChangePlan}/><br/>
+            <div style={style.text_inner}>{time}</div><br/>
+            <FlatButton label="重置" onClick={e=>{e.stopPropagation(),CounterActions.resetTime()}}/>
+          </div>
+          <Circle  strokeWidth={4} strokeColor={color} percent={this.state.percent} trailWidth={2} trailColor={Colors.grey300} />
+        </Paper>
         <div>
           <audio ref="alarm30" src="static/30.mp3" preload="auto"></audio>
           <audio ref="alarmfinish" src="static/finish.mp3" preload="auto"></audio>
         </div>
-        <FlatButton label="重置" />
+
       </div>
   }
 })
